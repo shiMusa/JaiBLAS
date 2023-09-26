@@ -1,6 +1,7 @@
 # JaiBLAS
 
 This is an OpenBLAS wrapper for Jai. 
+
 **Note:** Some function had to be commented out (see the `jaiblas_windows.jai` file) because the bindings generator couldn't find them in the library This might be a cblas issue.
 
 Currently only for Windows. Feel free to add linux/macOS support.
