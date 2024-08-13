@@ -35,12 +35,12 @@ generate_bindings :: () -> bool {
         array_add(*libnames, "libopenblas");
         array_add(*source_files, "OpenBlas/include/cblas.h");
         // array_add(*source_files, "OpenBlas/include/f77blas.h");
-        // array_add(*source_files, "OpenBlas/include/lapack.h");
-        // array_add(*source_files, "OpenBlas/include/lapacke.h");
-        // array_add(*source_files, "OpenBlas/include/lapacke_config.h");
-        // array_add(*source_files, "OpenBlas/include/lapacke_mangling.h");
+        array_add(*source_files, "OpenBlas/include/lapack.h");
+        array_add(*source_files, "OpenBlas/include/lapacke.h");
+        array_add(*source_files, "OpenBlas/include/lapacke_config.h");
+        array_add(*source_files, "OpenBlas/include/lapacke_mangling.h");
         array_add(*source_files, "OpenBlas/include/lapacke_utils.h");
-        // array_add(*source_files, "OpenBlas/include/openblas_config.h");
+        array_add(*source_files, "OpenBlas/include/openblas_config.h");
     }
 
     return generate_bindings(opts, output_fiename);

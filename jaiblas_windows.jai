@@ -28,7 +28,7 @@ OPENBLAS_DLOCAL_BUFFER_SIZE :: 4096;
 OPENBLAS_CLOCAL_BUFFER_SIZE :: 8192;
 OPENBLAS_ZLOCAL_BUFFER_SIZE :: 8192;
 OPENBLAS_GEMM_MULTITHREAD_THRESHOLD :: 4;
-OPENBLAS_VERSION :: " OpenBLAS 0.3.24 ";
+OPENBLAS_VERSION :: " OpenBLAS 0.3.28 ";
 
 OPENBLAS_SEQUENTIAL :: 0;
 
@@ -37,6 +37,8 @@ OPENBLAS_THREAD :: 1;
 OPENBLAS_OPENMP :: 2;
 
 CBLAS_INDEX :: u64;
+
+FORTRAN_STRLEN :: u64;
 
 lapack_int :: s32;
 
@@ -71,6 +73,7 @@ openblas_complex_xdouble :: struct {
 /*Set the number of threads on runtime.*/
 openblas_set_num_threads :: (num_threads: s32) -> void #foreign libopenblas;
 goto_set_num_threads :: (num_threads: s32) -> void #foreign libopenblas;
+// openblas_set_num_threads_local :: (num_threads: s32) -> s32 #foreign __UnknownLib;
 
 /*Get the number of threads on runtime.*/
 openblas_get_num_threads :: () -> s32 #foreign libopenblas;
@@ -83,6 +86,11 @@ openblas_get_config :: () -> *u8 #foreign libopenblas;
 
 /*Get the CPU corename on runtime.*/
 openblas_get_corename :: () -> *u8 #foreign libopenblas;
+
+/*Set the threading backend to a custom callback.*/
+openblas_dojob_callback :: #type (thread_num: s32, jobdata: *void, dojob_data: s32) -> void #c_call;
+openblas_threads_callback :: #type (sync: s32, dojob: openblas_dojob_callback, numjobs: s32, jobdata_elsize: u64, jobdata: *void, dojob_data: s32) -> void #c_call;
+// openblas_set_threads_callback_function :: (callback: openblas_threads_callback) -> void #foreign __UnknownLib;
 
 /* Get the parallelization type which is used by OpenBLAS */
 openblas_get_parallel :: () -> s32 #foreign libopenblas;
@@ -163,6 +171,16 @@ cblas_idamin :: (n: blasint, x: *float64, incx: blasint) -> u64 #foreign libopen
 cblas_icamin :: (n: blasint, x: *void, incx: blasint) -> u64 #foreign libopenblas;
 cblas_izamin :: (n: blasint, x: *void, incx: blasint) -> u64 #foreign libopenblas;
 
+cblas_samax :: (n: blasint, x: *float, incx: blasint) -> float #foreign libopenblas;
+cblas_damax :: (n: blasint, x: *float64, incx: blasint) -> float64 #foreign libopenblas;
+cblas_scamax :: (n: blasint, x: *void, incx: blasint) -> float #foreign libopenblas;
+cblas_dzamax :: (n: blasint, x: *void, incx: blasint) -> float64 #foreign libopenblas;
+
+cblas_samin :: (n: blasint, x: *float, incx: blasint) -> float #foreign libopenblas;
+cblas_damin :: (n: blasint, x: *float64, incx: blasint) -> float64 #foreign libopenblas;
+cblas_scamin :: (n: blasint, x: *void, incx: blasint) -> float #foreign libopenblas;
+cblas_dzamin :: (n: blasint, x: *void, incx: blasint) -> float64 #foreign libopenblas;
+
 cblas_ismax :: (n: blasint, x: *float, incx: blasint) -> u64 #foreign libopenblas;
 cblas_idmax :: (n: blasint, x: *float64, incx: blasint) -> u64 #foreign libopenblas;
 cblas_icmax :: (n: blasint, x: *void, incx: blasint) -> u64 #foreign libopenblas;
@@ -178,6 +196,9 @@ cblas_daxpy :: (n: blasint, alpha: float64, x: *float64, incx: blasint, y: *floa
 cblas_caxpy :: (n: blasint, alpha: *void, x: *void, incx: blasint, y: *void, incy: blasint) -> void #foreign libopenblas;
 cblas_zaxpy :: (n: blasint, alpha: *void, x: *void, incx: blasint, y: *void, incy: blasint) -> void #foreign libopenblas;
 
+cblas_caxpyc :: (n: blasint, alpha: *void, x: *void, incx: blasint, y: *void, incy: blasint) -> void #foreign libopenblas;
+cblas_zaxpyc :: (n: blasint, alpha: *void, x: *void, incx: blasint, y: *void, incy: blasint) -> void #foreign libopenblas;
+
 cblas_scopy :: (n: blasint, x: *float, incx: blasint, y: *float, incy: blasint) -> void #foreign libopenblas;
 cblas_dcopy :: (n: blasint, x: *float64, incx: blasint, y: *float64, incy: blasint) -> void #foreign libopenblas;
 cblas_ccopy :: (n: blasint, x: *void, incx: blasint, y: *void, incy: blasint) -> void #foreign libopenblas;
@@ -190,13 +211,13 @@ cblas_zswap :: (n: blasint, x: *void, incx: blasint, y: *void, incy: blasint) ->
 
 cblas_srot :: (N: blasint, X: *float, incX: blasint, Y: *float, incY: blasint, c: float, s: float) -> void #foreign libopenblas;
 cblas_drot :: (N: blasint, X: *float64, incX: blasint, Y: *float64, incY: blasint, c: float64, s: float64) -> void #foreign libopenblas;
-// cblas_csrot :: (n: blasint, x: *void, incx: blasint, y: *void, incY: blasint, c: float, s: float) -> void #foreign __UnknownLib;
-// cblas_zdrot :: (n: blasint, x: *void, incx: blasint, y: *void, incY: blasint, c: float64, s: float64) -> void #foreign __UnknownLib;
+cblas_csrot :: (n: blasint, x: *void, incx: blasint, y: *void, incY: blasint, c: float, s: float) -> void #foreign libopenblas;
+cblas_zdrot :: (n: blasint, x: *void, incx: blasint, y: *void, incY: blasint, c: float64, s: float64) -> void #foreign libopenblas;
 
 cblas_srotg :: (a: *float, b: *float, c: *float, s: *float) -> void #foreign libopenblas;
 cblas_drotg :: (a: *float64, b: *float64, c: *float64, s: *float64) -> void #foreign libopenblas;
-// cblas_crotg :: (a: *void, b: *void, c: *float, s: *void) -> void #foreign __UnknownLib;
-// cblas_zrotg :: (a: *void, b: *void, c: *float64, s: *void) -> void #foreign __UnknownLib;
+cblas_crotg :: (a: *void, b: *void, c: *float, s: *void) -> void #foreign libopenblas;
+cblas_zrotg :: (a: *void, b: *void, c: *float64, s: *void) -> void #foreign libopenblas;
 
 cblas_srotm :: (N: blasint, X: *float, incX: blasint, Y: *float, incY: blasint, P: *float) -> void #foreign libopenblas;
 cblas_drotm :: (N: blasint, X: *float64, incX: blasint, Y: *float64, incY: blasint, P: *float64) -> void #foreign libopenblas;
@@ -336,6 +357,14 @@ cblas_zgemm :: (Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANS
 
 cblas_zgemm3m :: (Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: *void, A: *void, lda: blasint, B: *void, ldb: blasint, beta: *void, C: *void, ldc: blasint) -> void #foreign libopenblas;
 
+cblas_sgemmt :: (Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, K: blasint, alpha: float, A: *float, lda: blasint, B: *float, ldb: blasint, beta: float, C: *float, ldc: blasint) -> void #foreign libopenblas;
+
+cblas_dgemmt :: (Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, K: blasint, alpha: float64, A: *float64, lda: blasint, B: *float64, ldb: blasint, beta: float64, C: *float64, ldc: blasint) -> void #foreign libopenblas;
+
+cblas_cgemmt :: (Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, K: blasint, alpha: *void, A: *void, lda: blasint, B: *void, ldb: blasint, beta: *void, C: *void, ldc: blasint) -> void #foreign libopenblas;
+
+cblas_zgemmt :: (Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, K: blasint, alpha: *void, A: *void, lda: blasint, B: *void, ldb: blasint, beta: *void, C: *void, ldc: blasint) -> void #foreign libopenblas;
+
 cblas_ssymm :: (Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: float, A: *float, lda: blasint, B: *float, ldb: blasint, beta: float, C: *float, ldc: blasint) -> void #foreign libopenblas;
 
 cblas_dsymm :: (Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: float64, A: *float64, lda: blasint, B: *float64, ldb: blasint, beta: float64, C: *float64, ldc: blasint) -> void #foreign libopenblas;
@@ -431,6 +460,14 @@ cblas_cgeadd :: (CORDER: CBLAS_ORDER, crows: blasint, ccols: blasint, calpha: *f
 
 cblas_zgeadd :: (CORDER: CBLAS_ORDER, crows: blasint, ccols: blasint, calpha: *float64, a: *float64, clda: blasint, cbeta: *float64, c: *float64, cldc: blasint) -> void #foreign libopenblas;
 
+cblas_sgemm_batch :: (Order: CBLAS_ORDER, TransA_array: *CBLAS_TRANSPOSE, TransB_array: *CBLAS_TRANSPOSE, M_array: *blasint, N_array: *blasint, K_array: *blasint, alpha_array: *float, A_array: **float, lda_array: *blasint, B_array: **float, ldb_array: *blasint, beta_array: *float, C_array: **float, ldc_array: *blasint, group_count: blasint, group_size: *blasint) -> void #foreign libopenblas;
+
+cblas_dgemm_batch :: (Order: CBLAS_ORDER, TransA_array: *CBLAS_TRANSPOSE, TransB_array: *CBLAS_TRANSPOSE, M_array: *blasint, N_array: *blasint, K_array: *blasint, alpha_array: *float64, A_array: **float64, lda_array: *blasint, B_array: **float64, ldb_array: *blasint, beta_array: *float64, C_array: **float64, ldc_array: *blasint, group_count: blasint, group_size: *blasint) -> void #foreign libopenblas;
+
+cblas_cgemm_batch :: (Order: CBLAS_ORDER, TransA_array: *CBLAS_TRANSPOSE, TransB_array: *CBLAS_TRANSPOSE, M_array: *blasint, N_array: *blasint, K_array: *blasint, alpha_array: *void, A_array: **void, lda_array: *blasint, B_array: **void, ldb_array: *blasint, beta_array: *void, C_array: **void, ldc_array: *blasint, group_count: blasint, group_size: *blasint) -> void #foreign libopenblas;
+
+cblas_zgemm_batch :: (Order: CBLAS_ORDER, TransA_array: *CBLAS_TRANSPOSE, TransB_array: *CBLAS_TRANSPOSE, M_array: *blasint, N_array: *blasint, K_array: *blasint, alpha_array: *void, A_array: **void, lda_array: *blasint, B_array: **void, ldb_array: *blasint, beta_array: *void, C_array: **void, ldc_array: *blasint, group_count: blasint, group_size: *blasint) -> void #foreign libopenblas;
+
 /*** BFLOAT16 and INT8 extensions ***/
 /* convert float array to BFLOAT16 array by rounding */
 // cblas_sbstobf16 :: (n: blasint, in: *float, incin: blasint, out: *bfloat16, incout: blasint) -> void #foreign __UnknownLib;
@@ -449,6 +486,8 @@ cblas_zgeadd :: (CORDER: CBLAS_ORDER, crows: blasint, ccols: blasint, calpha: *f
 // cblas_sbgemv :: (order: CBLAS_ORDER, trans: CBLAS_TRANSPOSE, m: blasint, n: blasint, alpha: float, a: *bfloat16, lda: blasint, x: *bfloat16, incx: blasint, beta: float, y: *float, incy: blasint) -> void #foreign __UnknownLib;
 
 // cblas_sbgemm :: (Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: float, A: *bfloat16, lda: blasint, B: *bfloat16, ldb: blasint, beta: float, C: *float, ldc: blasint) -> void #foreign __UnknownLib;
+
+// cblas_sbgemm_batch :: (Order: CBLAS_ORDER, TransA_array: *CBLAS_TRANSPOSE, TransB_array: *CBLAS_TRANSPOSE, M_array: *blasint, N_array: *blasint, K_array: *blasint, alpha_array: *float, A_array: **bfloat16, lda_array: *blasint, B_array: **bfloat16, ldb_array: *blasint, beta_array: *float, C_array: **float, ldc_array: *blasint, group_count: blasint, group_size: *blasint) -> void #foreign __UnknownLib;
 
 lapack_float_return :: float;
 
@@ -1713,7 +1752,7 @@ dtrsyl_ :: (trana: *u8, tranb: *u8, isgn: *s32, m: *s32, n: *s32, A: *float64, l
 
 strsyl_ :: (trana: *u8, tranb: *u8, isgn: *s32, m: *s32, n: *s32, A: *float, lda: *s32, B: *float, ldb: *s32, C: *float, ldc: *s32, scale: *float, info: *s32, unknown0: u64, unknown1: u64) -> void #foreign libopenblas;
 
-// dtrsyl3_ :: (trana: *u8, tranb: *u8, isgn: *s32, m: *s32, n: *s32, A: *float64, lda: *s32, B: *float64, ldb: *s32, C: *float64, ldc: *s32, scale: *float64, iwork: *s32, liwork: *s32, swork: *float64, ldswork: *s32, info: *s32, unknown0: u64, unknown1: u64) -> void #foreign __UnknownLib;
+dtrsyl3_ :: (trana: *u8, tranb: *u8, isgn: *s32, m: *s32, n: *s32, A: *float64, lda: *s32, B: *float64, ldb: *s32, C: *float64, ldc: *s32, scale: *float64, iwork: *s32, liwork: *s32, swork: *float64, ldswork: *s32, info: *s32, unknown0: u64, unknown1: u64) -> void #foreign libopenblas;
 
 // strsyl3_ :: (trana: *u8, tranb: *u8, isgn: *s32, m: *s32, n: *s32, A: *float, lda: *s32, B: *float, ldb: *s32, C: *float, ldc: *s32, scale: *float, iwork: *s32, liwork: *s32, swork: *float, ldswork: *s32, info: *s32, unknown0: u64, unknown1: u64) -> void #foreign __UnknownLib;
 
@@ -2087,9 +2126,9 @@ LAPACKE_dlagge :: (matrix_layout: s32, m: s32, n: s32, kl: s32, ku: s32, d: *flo
 LAPACKE_slamch :: (cmach: u8) -> float #foreign libopenblas;
 LAPACKE_dlamch :: (cmach: u8) -> float64 #foreign libopenblas;
 
-// LAPACKE_slangb :: (matrix_layout: s32, norm: u8, n: s32, kl: s32, ku: s32, ab: *float, ldab: s32) -> float #foreign __UnknownLib;
+LAPACKE_slangb :: (matrix_layout: s32, norm: u8, n: s32, kl: s32, ku: s32, ab: *float, ldab: s32) -> float #foreign libopenblas;
 
-// LAPACKE_dlangb :: (matrix_layout: s32, norm: u8, n: s32, kl: s32, ku: s32, ab: *float64, ldab: s32) -> float64 #foreign __UnknownLib;
+LAPACKE_dlangb :: (matrix_layout: s32, norm: u8, n: s32, kl: s32, ku: s32, ab: *float64, ldab: s32) -> float64 #foreign libopenblas;
 
 LAPACKE_slange :: (matrix_layout: s32, norm: u8, m: s32, n: s32, a: *float, lda: s32) -> float #foreign libopenblas;
 
@@ -2697,9 +2736,9 @@ LAPACKE_strsyl :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, 
 
 LAPACKE_dtrsyl :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, n: s32, a: *float64, lda: s32, b: *float64, ldb: s32, c: *float64, ldc: s32, scale: *float64) -> s32 #foreign libopenblas;
 
-// LAPACKE_strsyl3 :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, n: s32, a: *float, lda: s32, b: *float, ldb: s32, c: *float, ldc: s32, scale: *float) -> s32 #foreign __UnknownLib;
+LAPACKE_strsyl3 :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, n: s32, a: *float, lda: s32, b: *float, ldb: s32, c: *float, ldc: s32, scale: *float) -> s32 #foreign libopenblas;
 
-// LAPACKE_dtrsyl3 :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, n: s32, a: *float64, lda: s32, b: *float64, ldb: s32, c: *float64, ldc: s32, scale: *float64) -> s32 #foreign __UnknownLib;
+LAPACKE_dtrsyl3 :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, n: s32, a: *float64, lda: s32, b: *float64, ldb: s32, c: *float64, ldc: s32, scale: *float64) -> s32 #foreign libopenblas;
 
 LAPACKE_strtri :: (matrix_layout: s32, uplo: u8, diag: u8, n: s32, a: *float, lda: s32) -> s32 #foreign libopenblas;
 
@@ -3104,9 +3143,9 @@ LAPACKE_dlapy3_work :: (x: float64, y: float64, z: float64) -> float64 #foreign 
 LAPACKE_slamch_work :: (cmach: u8) -> float #foreign libopenblas;
 LAPACKE_dlamch_work :: (cmach: u8) -> float64 #foreign libopenblas;
 
-// LAPACKE_slangb_work :: (matrix_layout: s32, norm: u8, n: s32, kl: s32, ku: s32, ab: *float, ldab: s32, work: *float) -> float #foreign __UnknownLib;
+LAPACKE_slangb_work :: (matrix_layout: s32, norm: u8, n: s32, kl: s32, ku: s32, ab: *float, ldab: s32, work: *float) -> float #foreign libopenblas;
 
-// LAPACKE_dlangb_work :: (matrix_layout: s32, norm: u8, n: s32, kl: s32, ku: s32, ab: *float64, ldab: s32, work: *float64) -> float64 #foreign __UnknownLib;
+LAPACKE_dlangb_work :: (matrix_layout: s32, norm: u8, n: s32, kl: s32, ku: s32, ab: *float64, ldab: s32, work: *float64) -> float64 #foreign libopenblas;
 
 LAPACKE_slange_work :: (matrix_layout: s32, norm: u8, m: s32, n: s32, a: *float, lda: s32, work: *float) -> float #foreign libopenblas;
 
@@ -3714,9 +3753,9 @@ LAPACKE_strsyl_work :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: 
 
 LAPACKE_dtrsyl_work :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, n: s32, a: *float64, lda: s32, b: *float64, ldb: s32, c: *float64, ldc: s32, scale: *float64) -> s32 #foreign libopenblas;
 
-// LAPACKE_strsyl3_work :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, n: s32, a: *float, lda: s32, b: *float, ldb: s32, c: *float, ldc: s32, scale: *float, iwork: *s32, liwork: s32, swork: *float, ldswork: s32) -> s32 #foreign __UnknownLib;
+LAPACKE_strsyl3_work :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, n: s32, a: *float, lda: s32, b: *float, ldb: s32, c: *float, ldc: s32, scale: *float, iwork: *s32, liwork: s32, swork: *float, ldswork: s32) -> s32 #foreign libopenblas;
 
-// LAPACKE_dtrsyl3_work :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, n: s32, a: *float64, lda: s32, b: *float64, ldb: s32, c: *float64, ldc: s32, scale: *float64, iwork: *s32, liwork: s32, swork: *float64, ldswork: s32) -> s32 #foreign __UnknownLib;
+LAPACKE_dtrsyl3_work :: (matrix_layout: s32, trana: u8, tranb: u8, isgn: s32, m: s32, n: s32, a: *float64, lda: s32, b: *float64, ldb: s32, c: *float64, ldc: s32, scale: *float64, iwork: *s32, liwork: s32, swork: *float64, ldswork: s32) -> s32 #foreign libopenblas;
 
 LAPACKE_strtri_work :: (matrix_layout: s32, uplo: u8, diag: u8, n: s32, a: *float, lda: s32) -> s32 #foreign libopenblas;
 
@@ -4130,13 +4169,13 @@ LAPACKE_dsytrs_aa_2stage :: (matrix_layout: s32, uplo: u8, n: s32, nrhs: s32, a:
 LAPACKE_dsytrs_aa_2stage_work :: (matrix_layout: s32, uplo: u8, n: s32, nrhs: s32, a: *float64, lda: s32, tb: *float64, ltb: s32, ipiv: *s32, ipiv2: *s32, b: *float64, ldb: s32) -> s32 #foreign libopenblas;
 
 //LAPACK 3.10.0
-// LAPACKE_sorhr_col :: (matrix_layout: s32, m: s32, n: s32, nb: s32, a: *float, lda: s32, t: *float, ldt: s32, d: *float) -> s32 #foreign __UnknownLib;
+LAPACKE_sorhr_col :: (matrix_layout: s32, m: s32, n: s32, nb: s32, a: *float, lda: s32, t: *float, ldt: s32, d: *float) -> s32 #foreign libopenblas;
 
-// LAPACKE_sorhr_col_work :: (matrix_layout: s32, m: s32, n: s32, nb: s32, a: *float, lda: s32, t: *float, ldt: s32, d: *float) -> s32 #foreign __UnknownLib;
+LAPACKE_sorhr_col_work :: (matrix_layout: s32, m: s32, n: s32, nb: s32, a: *float, lda: s32, t: *float, ldt: s32, d: *float) -> s32 #foreign libopenblas;
 
-// LAPACKE_dorhr_col :: (matrix_layout: s32, m: s32, n: s32, nb: s32, a: *float64, lda: s32, t: *float64, ldt: s32, d: *float64) -> s32 #foreign __UnknownLib;
+LAPACKE_dorhr_col :: (matrix_layout: s32, m: s32, n: s32, nb: s32, a: *float64, lda: s32, t: *float64, ldt: s32, d: *float64) -> s32 #foreign libopenblas;
 
-// LAPACKE_dorhr_col_work :: (matrix_layout: s32, m: s32, n: s32, nb: s32, a: *float64, lda: s32, t: *float64, ldt: s32, d: *float64) -> s32 #foreign __UnknownLib;
+LAPACKE_dorhr_col_work :: (matrix_layout: s32, m: s32, n: s32, nb: s32, a: *float64, lda: s32, t: *float64, ldt: s32, d: *float64) -> s32 #foreign libopenblas;
 
 /* APIs for set/get nancheck flags */
 LAPACKE_set_nancheck :: (flag: s32) -> void #foreign libopenblas;
@@ -4178,7 +4217,7 @@ LAPACKE_dtp_trans :: (matrix_layout: s32, uplo: u8, diag: u8, n: s32, in: *float
 
 LAPACKE_dtr_trans :: (matrix_layout: s32, uplo: u8, diag: u8, n: s32, in: *float64, ldin: s32, out: *float64, ldout: s32) -> void #foreign libopenblas;
 
-// LAPACKE_dtz_trans :: (matrix_layout: s32, direct: u8, uplo: u8, diag: u8, m: s32, n: s32, in: *float64, ldin: s32, out: *float64, ldout: s32) -> void #foreign __UnknownLib;
+LAPACKE_dtz_trans :: (matrix_layout: s32, direct: u8, uplo: u8, diag: u8, m: s32, n: s32, in: *float64, ldin: s32, out: *float64, ldout: s32) -> void #foreign libopenblas;
 
 LAPACKE_sgb_trans :: (matrix_layout: s32, m: s32, n: s32, kl: s32, ku: s32, in: *float, ldin: s32, out: *float, ldout: s32) -> void #foreign libopenblas;
 
@@ -4210,7 +4249,7 @@ LAPACKE_stp_trans :: (matrix_layout: s32, uplo: u8, diag: u8, n: s32, in: *float
 
 LAPACKE_str_trans :: (matrix_layout: s32, uplo: u8, diag: u8, n: s32, in: *float, ldin: s32, out: *float, ldout: s32) -> void #foreign libopenblas;
 
-// LAPACKE_stz_trans :: (matrix_layout: s32, direct: u8, uplo: u8, diag: u8, m: s32, n: s32, in: *float, ldin: s32, out: *float, ldout: s32) -> void #foreign __UnknownLib;
+LAPACKE_stz_trans :: (matrix_layout: s32, direct: u8, uplo: u8, diag: u8, m: s32, n: s32, in: *float, ldin: s32, out: *float, ldout: s32) -> void #foreign libopenblas;
 
 LAPACKE_d_nancheck :: (n: s32, x: *float64, incx: s32) -> s32 #foreign libopenblas;
 
@@ -4252,7 +4291,7 @@ LAPACKE_dtp_nancheck :: (matrix_layout: s32, uplo: u8, diag: u8, n: s32, ap: *fl
 
 LAPACKE_dtr_nancheck :: (matrix_layout: s32, uplo: u8, diag: u8, n: s32, a: *float64, lda: s32) -> s32 #foreign libopenblas;
 
-// LAPACKE_dtz_nancheck :: (matrix_layout: s32, direct: u8, uplo: u8, diag: u8, m: s32, n: s32, a: *float64, lda: s32) -> s32 #foreign __UnknownLib;
+LAPACKE_dtz_nancheck :: (matrix_layout: s32, direct: u8, uplo: u8, diag: u8, m: s32, n: s32, a: *float64, lda: s32) -> s32 #foreign libopenblas;
 
 LAPACKE_sgb_nancheck :: (matrix_layout: s32, m: s32, n: s32, kl: s32, ku: s32, ab: *float, ldab: s32) -> s32 #foreign libopenblas;
 
@@ -4290,11 +4329,11 @@ LAPACKE_stp_nancheck :: (matrix_layout: s32, uplo: u8, diag: u8, n: s32, ap: *fl
 
 LAPACKE_str_nancheck :: (matrix_layout: s32, uplo: u8, diag: u8, n: s32, a: *float, lda: s32) -> s32 #foreign libopenblas;
 
-// LAPACKE_stz_nancheck :: (matrix_layout: s32, direct: u8, uplo: u8, diag: u8, m: s32, n: s32, a: *float, lda: s32) -> s32 #foreign __UnknownLib;
+LAPACKE_stz_nancheck :: (matrix_layout: s32, direct: u8, uplo: u8, diag: u8, m: s32, n: s32, a: *float, lda: s32) -> s32 #foreign libopenblas;
 
 #scope_file
 
-#import "Basic"; // For assert
+#import "Basic"; // For assert, push_context
 
 libopenblas :: #library,no_dll "OpenBlas/lib/libopenblas";
 
